@@ -2,10 +2,7 @@
 ; Practica5.asm
 ;
 ; Created: 19/06/2020 05:10:37 p. m.
-; Author : Luis Nogal
 ;
-
-
 ; Replace with your application code
 .ORG 0X00
 JMP RESET
@@ -30,7 +27,7 @@ RESET:
     out TCCR0A,r22  // 00100011
     ldi r22,0x03     //WGM02, CS00 00001011
     out TCCR0B,r22   //
-	LDI R16, 100
+	LDI R16, 255
 	OUT OCR0A, R16
 	LDI R16, 0X02
 	STS TIMSK0, R16
@@ -95,94 +92,67 @@ DIV:
 		SBC r8,r8
 		BRLT OK
 		RJMP COUNT
+//---------Selector de digito para imprimir
 	OK:	
 		TST R0
-		BREQ CERO2
+		BREQ CERO
 		MOV R27, R0
 		CPI R27, 0X01
-		BREQ UNO2
-		MOV R27, R0
+		BREQ UNO
 		CPI R27, 0X02
-		BREQ DOS2
-		MOV R27, R0
+		BREQ DOS
 		CPI R27, 0X03
-		BREQ TRES2
-		MOV R27, R0
+		BREQ TRES
 		CPI R27, 0X04
-		BREQ CUATRO2
-		MOV R27, R0
+		BREQ CUATRO
 		CPI R27, 0X05
-		BREQ CINCO2
-		MOV R27, R0
+		BREQ CINCO
 		CPI R27, 0X06
-		BREQ SEIS2
-		MOV R27, R0
+		BREQ SEIS
 		CPI R27, 0X07
-		BREQ SIETE2
-		MOV R27, R0
+		BREQ SIETE
 		CPI R27, 0X08
-		BREQ OCHO2
-		MOV R27, R0
+		BREQ OCHO
 		CPI R27, 0X09
-		BREQ NUEVE2
+		BREQ NUEVE
 OUTPUT:	
 		ADD R24, R25
-		MOV R26, R24
-		CPI R26, 0X01
+		CPI R24, 0X01
 		BREQ CIEN
-		MOV R26, R24
-		CPI R26, 0X02
+		CPI R24, 0X02
 		BREQ DIEZ
-		CPI R26, 0X03
+		CPI R24, 0X03
 		BREQ UNIDAD
-SETDEN:	
-		CPI R26, 0X04
+SETDEN:	//---- cuando regresa aqui el siguiente denominador ya esta decidido
+		CPI R24, 0X04
 		BREQ CON		
 		MOVW R22, R2
 		RJMP DIV	
-
+		//-------pregunta si el digito lleva punto como en el primero de la izquierda
 QPUNTO:	
 		TST r24
 		BREQ PUNTO
 		RJMP OUTPUT
-CON:	
+CON:	//carga a r12 (ultimo digito en ser impreso) y regresa a convertir otra vez
 		MOV R12, R22
 		RJMP CONVER
-CERO2:
-		RJMP CERO
-UNO2:
-		RJMP UNO
-DOS2:
-		RJMP DOS
-TRES2:
-		RJMP TRES
-CUATRO2:
-		RJMP CUATRO
-CINCO2:
-		RJMP CINCO
-SEIS2:
-		RJMP SEIS
-SIETE2:
-		RJMP SIETE
-OCHO2:
-		RJMP OCHO
-NUEVE2:
-		RJMP NUEVE
-CIEN:	
+CIEN:	// setea el denominador a 100D y guarda el primer digito en r9
 		CLR R21
 		LDI R20, 0X64
 		MOV R9, R22
 		RJMP SETDEN
-DIEZ:	
+DIEZ:	// setea el denominador a 10D y guarda el segundo digito en r10
 		CLR R21
 		LDI R20, 0X0A
 		MOV R10, R22
 		RJMP SETDEN
-UNIDAD:	
+UNIDAD:	// setea el denominador a 1D y guarda el primer digito en r11
 		CLR R21
 		LDI R20, 0X01
 		MOV R11, R22
 		RJMP SETDEN
+//------------Cargar digito a umprimir decidido en el selector
+
 PUNTO:	
 		ADD R22, R25
 		RJMP OUTPUT
@@ -217,13 +187,8 @@ OCHO:
 NUEVE:	
 		LDI r22, 0xE6
 		RJMP QPUNTO
-
+//--------Subrrutina de la interrupción de timer0 cuando compara con OCR0A
 TIM0_COMPA:
-	CPI R29, 0X03
-	BREQ PRINT
-	INC R29
-	RJMP EXIT
-PRINT:
 	CLR R29
 	CPI R28, 0X00
 	BREQ PRINT1
@@ -237,25 +202,25 @@ EXIT:
 	RETI
 PRINT1:
 		OUT PORTD, R29
-		OUT portd, r9
-		OUT portb, r28
+		OUT PORTD, r9
+		OUT PORTB, r28
 		INC R28
 		RJMP EXIT
 PRINT2:
 		OUT PORTD, R29
-		OUT portd, r10
-		OUT portb, r28
+		OUT PORTD, r10
+		OUT PORTB, r28
 		INC R28
 		RJMP EXIT
 PRINT3:
 		OUT PORTD, R29
-		OUT portd, r11
-		OUT portb, r28
+		OUT PORTD, r11
+		OUT PORTB, r28
 		INC R28
 		RJMP EXIT
 PRINT4:
 		OUT PORTD, R29
-		OUT portd, r12
-		OUT portb, r28
+		OUT PORTD, r12
+		OUT PORTB, r28
 		CLR R28
 		RJMP EXIT
